@@ -79,6 +79,21 @@
   font-weight: 600;
 }
 
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.envBadge {
+  font-size: 0.7rem;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
 .inputGroup input {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -105,9 +120,85 @@
   width: 100%;
 }
 
+.magicBtn {
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  color: white;
+  padding: 0.75rem 2rem;
+  border-radius: 10px;
+  font-weight: 600;
+  width: 100%;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  transition: all 0.3s ease;
+}
+
+.magicBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.magicBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.buttonGroup {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  margin: 0 1rem;
+}
+
+.magicHint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .secondaryBtn {
   color: var(--text-muted);
   font-weight: 600;
+}
+
+.errorBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem;
+  color: var(--error);
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-md);
+  width: 100%;
+}
+
+.errorBox p {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.errorDetail {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  text-align: center;
+  max-width: 300px;
 }
 
 .dbList {

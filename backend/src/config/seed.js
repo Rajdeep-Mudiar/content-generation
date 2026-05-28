@@ -68,17 +68,22 @@ export const seedApiKeys = async () => {
 
     // Sync Notion Token from .env
     if (process.env.NOTION_TOKEN) {
+      const token = process.env.NOTION_TOKEN.trim();
+      if (!token.startsWith('secret_')) {
+        console.warn('WARNING: NOTION_TOKEN in .env does not start with "secret_". It is likely invalid.');
+      }
+      
       const { NotionConfig } = await import('../models/NotionConfig.js');
       const existingConfig = await NotionConfig.findOne();
       if (!existingConfig) {
         await NotionConfig.create({
-          accessToken: process.env.NOTION_TOKEN,
+          accessToken: token,
           isConnected: true,
           syncSettings: { autoSync: true, platforms: ['Quora', 'LinkedIn', 'Medium'] }
         });
         console.log('Notion configuration seeded from .env');
-      } else if (existingConfig.accessToken !== process.env.NOTION_TOKEN) {
-        existingConfig.accessToken = process.env.NOTION_TOKEN;
+      } else if (existingConfig.accessToken !== token) {
+        existingConfig.accessToken = token;
         existingConfig.isConnected = true;
         await existingConfig.save();
         console.log('Notion configuration updated from .env');

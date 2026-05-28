@@ -25,14 +25,15 @@ const NotionIntegration = () => {
     }
   });
 
-  const { data: databases, isLoading: loadingDBs } = useQuery({
-    queryKey: ['notion-databases', token],
+  const { data: databases, isLoading: loadingDBs, error: dbError } = useQuery({
+    queryKey: ['notion-databases', token || config?.accessToken],
     queryFn: async () => {
-      if (!token) return [];
-      const res = await api.get(`/notion/databases?accessToken=${token}`);
+      const activeToken = token || config?.accessToken;
+      if (!activeToken) return [];
+      const res = await api.get(`/notion/databases?accessToken=${activeToken}`);
       return res.data;
     },
-    enabled: !!token && step === 2
+    enabled: step === 2 || (!!config?.accessToken && !config?.databaseId)
   });
 
   const updateConfigMutation = useMutation({
@@ -40,16 +41,44 @@ const NotionIntegration = () => {
     onSuccess: () => {
       queryClient.invalidateQueries(['notion-config']);
       setStep(1);
+      alert('Notion integration updated successfully!');
+    },
+    onError: (err) => {
+      alert(`Update failed: ${err.response?.data?.message || err.message}`);
+    }
+  });
+
+  const autoSetupMutation = useMutation({
+    mutationFn: (data) => api.post('/notion/auto-setup', data),
+    onSuccess: (res) => {
+      queryClient.invalidateQueries(['notion-config']);
+      alert('Successfully setup and connected to Notion!');
+    },
+    onError: (err) => {
+      alert(`Auto-setup failed: ${err.response?.data?.message || err.message}`);
     }
   });
 
   const handleConnect = () => {
-    if (token) setStep(2);
+    if (token || config?.accessToken) {
+      setStep(2);
+    } else {
+      alert('Please enter a token or ensure NOTION_TOKEN is set in .env');
+    }
+  };
+
+  const handleAutoSetup = () => {
+    const activeToken = token || config?.accessToken;
+    if (!activeToken) {
+      alert('Please enter a token first.');
+      return;
+    }
+    autoSetupMutation.mutate({ accessToken: activeToken });
   };
 
   const handleSelectDB = (dbId) => {
     updateConfigMutation.mutate({
-      accessToken: token,
+      accessToken: token || config?.accessToken,
       databaseId: dbId,
       isConnected: true
     });
@@ -83,7 +112,12 @@ const NotionIntegration = () => {
                 <h2>Connect to Notion</h2>
                 <p>Enter your Notion Integration Token to get started.</p>
                 <div className={styles.inputGroup}>
-                  <label>Integration Token</label>
+                  <div className={styles.labelRow}>
+                    <label>Integration Token</label>
+                    {config?.isFromEnv && !token && (
+                      <span className={styles.envBadge}>Loaded from .env</span>
+                    )}
+                  </div>
                   <input 
                     type="password" 
                     placeholder="secret_..."
@@ -94,13 +128,29 @@ const NotionIntegration = () => {
                     Where do I find this? <ExternalLink size={12} />
                   </a>
                 </div>
-                <button 
-                  className={styles.primaryBtn} 
-                  onClick={handleConnect}
-                  disabled={!token && !config?.accessToken}
-                >
-                  Next: Select Database
-                </button>
+                
+                <div className={styles.buttonGroup}>
+                  <button 
+                    className={styles.primaryBtn} 
+                    onClick={handleConnect}
+                    disabled={!token && !config?.accessToken}
+                  >
+                    Manual Setup: Select DB
+                  </button>
+                  
+                  <div className={styles.divider}>OR</div>
+
+                  <button 
+                    className={styles.magicBtn} 
+                    onClick={handleAutoSetup}
+                    disabled={(!token && !config?.accessToken) || autoSetupMutation.isPending}
+                  >
+                    {autoSetupMutation.isPending ? 'Setting up...' : 'Auto-Setup & Connect'}
+                  </button>
+                  <p className={styles.magicHint}>
+                    * Requires a Notion page named "ai-content-generation" to be shared with this integration.
+                  </p>
+                </div>
               </div>
             ) : (
               <div className={styles.stepContent}>
@@ -113,6 +163,17 @@ const NotionIntegration = () => {
                 <div className={styles.dbList}>
                   {loadingDBs ? (
                     <div className={styles.loadingDBs}>Fetching databases...</div>
+                  ) : dbError ? (
+                    <div className={styles.errorBox}>
+                      <AlertTriangle size={24} />
+                      <p>Connection Error</p>
+                      <span className={styles.errorDetail}>
+                        {dbError.response?.data?.message || dbError.message}
+                      </span>
+                      <button className={styles.secondaryBtn} onClick={() => setStep(1)}>
+                        Check Token & Retry
+                      </button>
+                    </div>
                   ) : databases?.length > 0 ? (
                     databases.map(db => (
                       <button 
@@ -153,7 +214,7 @@ const NotionIntegration = () => {
                   <p>Automatically sync new content as it's generated.</p>
                 </div>
                 <div className={styles.toggle}>
-                  <input type="checkbox" checked={config?.syncSettings?.autoSync} readOnly />
+                  <input type="checkbox" checked={config?.syncSettings?.autoSync || false} readOnly />
                   <span className={styles.slider}></span>
                 </div>
               </div>
@@ -163,7 +224,7 @@ const NotionIntegration = () => {
                   <p>Send a daily summary of generation stats to Notion.</p>
                 </div>
                 <div className={styles.toggle}>
-                  <input type="checkbox" checked />
+                  <input type="checkbox" checked={true} readOnly />
                   <span className={styles.slider}></span>
                 </div>
               </div>
