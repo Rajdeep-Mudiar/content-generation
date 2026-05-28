@@ -1,0 +1,148 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: var(--text-muted);
+}
+
+.refreshBtn {
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.filters {
+  display: flex;
+  gap: 1.5rem;
+  background: var(--bg-soft);
+  padding: 1.25rem;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filterGroup label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.filterGroup select {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 8px;
+  min-width: 160px;
+  outline: none;
+}
+
+.logsWrapper {
+  background: var(--bg-soft);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.logsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.logItem {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.logIcon {
+  margin-top: 4px;
+}
+
+.logMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.logHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logContext {
+  font-family: monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.logTime {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.logMsg {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.logDetails {
+  background: var(--bg);
+  padding: 1rem;
+  border-radius: 8px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.logItem.error { border-left: 4px solid var(--error); }
+.logItem.error .logIcon { color: var(--error); }
+
+.logItem.warn { border-left: 4px solid var(--warning); }
+.logItem.warn .logIcon { color: var(--warning); }
+
+.logItem.info { border-left: 4px solid var(--primary); }
+.logItem.info .logIcon { color: var(--primary); }
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: var(--text-muted);
+}
