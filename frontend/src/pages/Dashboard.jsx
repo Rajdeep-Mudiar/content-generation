@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { 
   FileText, 
   Zap, 
@@ -12,7 +12,7 @@ import api from '../api/axios';
 import styles from './Dashboard.module.css';
 
 const StatCard = ({ title, value, icon, color, trend }) => (
-  <div className={styles.statCard}>
+  <div className={`${styles.statCard} glass-card`}>
     <div className={`${styles.iconContainer} ${styles[color]}`}>
       {icon}
     </div>
@@ -27,11 +27,19 @@ const StatCard = ({ title, value, icon, color, trend }) => (
 );
 
 const Dashboard = () => {
-  const { data: summary, isLoading } = useQuery({
+  const { data: summary, isLoading, refetch } = useQuery({
     queryKey: ['dashboard-summary'],
     queryFn: async () => {
       const res = await api.get('/analytics/summary');
       return res.data;
+    }
+  });
+
+  const generateMutation = useMutation({
+    mutationFn: () => api.post('/content/generate'),
+    onSuccess: () => {
+      refetch();
+      alert('Content generation started!');
     }
   });
 
@@ -50,11 +58,15 @@ const Dashboard = () => {
       <header className={styles.header}>
         <div>
           <h1 className={styles.title}>Welcome back, Architect</h1>
-          <p className={styles.subtitle}>Here's what's happening with your AI content pipeline.</p>
+          <p className={styles.subtitle}>Your AI content pipeline is optimized and running.</p>
         </div>
-        <button className={styles.primaryBtn}>
+        <button 
+          className={styles.primaryBtn}
+          onClick={() => generateMutation.mutate()}
+          disabled={generateMutation.isPending}
+        >
           <Zap size={18} />
-          <span>Generate Now</span>
+          <span>{generateMutation.isPending ? 'Generating...' : 'Generate Day 1 Content'}</span>
         </button>
       </header>
 
@@ -87,7 +99,7 @@ const Dashboard = () => {
       </div>
 
       <div className={styles.contentGrid}>
-        <section className={styles.section}>
+        <section className={`${styles.section} glass-card`}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Provider Usage</h2>
             <Activity size={18} className={styles.sectionIcon} />
@@ -95,11 +107,34 @@ const Dashboard = () => {
           <div className={styles.usageCard}>
             <div className={styles.usageItem}>
               <div className={styles.usageInfo}>
-                <span>Groq (Primary)</span>
+                <span>DeepSeek (Highest Priority)</span>
+                <span>{summary?.today?.providerUsage?.deepseek || 0} requests</span>
+              </div>
+              <div className={styles.progressBar}>
+                <div 
+                  className={styles.progress} 
+                  style={{ 
+                    width: `${Math.min(100, ((summary?.today?.providerUsage?.deepseek || 0) / (summary?.today?.totalGenerated || 1)) * 100)}%`, 
+                    background: 'var(--accent)',
+                    color: 'var(--accent)'
+                  }}
+                ></div>
+              </div>
+            </div>
+            <div className={styles.usageItem}>
+              <div className={styles.usageInfo}>
+                <span>Groq (Secondary)</span>
                 <span>{summary?.today?.providerUsage?.groq || 0} requests</span>
               </div>
               <div className={styles.progressBar}>
-                <div className={styles.progress} style={{ width: '85%', background: 'var(--primary)' }}></div>
+                <div 
+                  className={styles.progress} 
+                  style={{ 
+                    width: `${Math.min(100, ((summary?.today?.providerUsage?.groq || 0) / (summary?.today?.totalGenerated || 1)) * 100)}%`, 
+                    background: 'var(--primary)',
+                    color: 'var(--primary)'
+                  }}
+                ></div>
               </div>
             </div>
             <div className={styles.usageItem}>
@@ -108,19 +143,26 @@ const Dashboard = () => {
                 <span>{summary?.today?.providerUsage?.gemini || 0} requests</span>
               </div>
               <div className={styles.progressBar}>
-                <div className={styles.progress} style={{ width: '15%', background: 'var(--success)' }}></div>
+                <div 
+                  className={styles.progress} 
+                  style={{ 
+                    width: `${Math.min(100, ((summary?.today?.providerUsage?.gemini || 0) / (summary?.today?.totalGenerated || 1)) * 100)}%`, 
+                    background: 'var(--success)',
+                    color: 'var(--success)'
+                  }}
+                ></div>
               </div>
             </div>
           </div>
         </section>
 
-        <section className={styles.section}>
+        <section className={`${styles.section} glass-card`}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Recent Activity</h2>
             <Clock size={18} className={styles.sectionIcon} />
           </div>
           <div className={styles.logsList}>
-            {logs?.map((log, i) => (
+            {logs?.length > 0 ? logs.map((log, i) => (
               <div key={i} className={styles.logItem}>
                 <div className={`${styles.logDot} ${styles[log.level]}`}></div>
                 <div className={styles.logContent}>
@@ -128,7 +170,9 @@ const Dashboard = () => {
                   <span className={styles.logTime}>{new Date(log.timestamp).toLocaleTimeString()}</span>
                 </div>
               </div>
-            ))}
+            )) : (
+              <p className={styles.emptyLogs}>No activity recorded yet.</p>
+            )}
           </div>
         </section>
       </div>

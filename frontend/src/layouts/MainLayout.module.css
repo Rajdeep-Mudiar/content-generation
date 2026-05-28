@@ -1,37 +1,102 @@
 .layout {
   display: flex;
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
   background-color: var(--bg);
-  transition: var(--transition);
+  position: relative;
+  overflow-x: hidden;
+}
+
+.sidebarWrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1000;
+  width: var(--sidebar-width);
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.sidebarWrapper.open {
+  transform: translateX(0);
+}
+
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebarWrapper.open .overlay {
+  display: block;
+  opacity: 1;
 }
 
 .mainContent {
   flex: 1;
   display: flex;
   flex-direction: column;
-  margin-left: var(--sidebar-width);
-  transition: var(--transition);
   min-width: 0;
-}
-
-.mainContent.expanded {
-  margin-left: var(--sidebar-collapsed-width);
+  transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .content {
-  padding: 2rem;
+  padding: 1.5rem 0;
   flex: 1;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
 }
 
-@media (max-width: 768px) {
-  .mainContent {
-    margin-left: 0;
+.mobileMenuBtn {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+  z-index: 900;
+  border: none;
+  outline: none;
+}
+
+@media (min-width: 1024px) {
+  .sidebarWrapper {
+    transform: translateX(0);
+    position: sticky;
   }
-  .mainContent.expanded {
-    margin-left: 0;
+
+  .mainContent.withSidebar {
+    /* No margin needed when sticky */
+  }
+
+  .sidebarWrapper.open .overlay {
+    display: none;
+  }
+
+  .mobileMenuBtn {
+    display: none;
+  }
+}
+
+@media (max-width: 1023px) {
+  .mobileMenuBtn {
+    display: flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 1rem 0;
   }
 }

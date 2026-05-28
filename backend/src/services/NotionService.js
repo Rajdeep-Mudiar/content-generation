@@ -4,13 +4,19 @@ import { dbLogger } from '../utils/logger.js';
 
 class NotionService {
   async getClient() {
-    const config = await NotionConfig.findOne({ isConnected: true });
-    if (!config || !config.accessToken) {
+    let config = await NotionConfig.findOne({ isConnected: true });
+    
+    // Fallback to process.env if no DB config or not connected
+    const token = config?.accessToken || process.env.NOTION_TOKEN;
+    const databaseId = config?.databaseId || process.env.NOTION_DATABASE_ID;
+
+    if (!token) {
       return null;
     }
+
     return {
-      client: new Client({ auth: config.accessToken }),
-      databaseId: config.databaseId
+      client: new Client({ auth: token }),
+      databaseId: databaseId
     };
   }
 

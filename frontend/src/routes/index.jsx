@@ -15,11 +15,8 @@ const AppRoutes = () => {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="content" element={<GeneratedContent />} />
-        <Route path="calendar" element={<ContentCalendar />} />
         <Route path="api-keys" element={<ApiManagement />} />
-        <Route path="analytics" element={<Analytics />} />
         <Route path="notion" element={<NotionIntegration />} />
-        <Route path="settings" element={<Settings />} />
         <Route path="logs" element={<Logs />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

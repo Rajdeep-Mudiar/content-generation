@@ -1,5 +1,5 @@
+import './config/env.js';
 import express from 'express';
-import dotenv from 'dotenv';
 import cors from 'cors';
 import helmet from 'helmet';
 import { connectDB } from './config/db.js';
@@ -15,14 +15,22 @@ import notionRoutes from './routes/notionRoutes.js';
 import analyticsRoutes from './routes/analyticsRoutes.js';
 import logRoutes from './routes/logRoutes.js';
 
-dotenv.config();
-
 const app = express();
 
 // Connect to Database
-connectDB().then(() => {
+connectDB().then(async () => {
   // Seed API keys from .env if needed
-  seedApiKeys();
+  await seedApiKeys();
+  
+  // Trigger initial content generation if none exists
+  import('./services/ContentService.js').then(async ({ default: ContentService }) => {
+    const { Content } = await import('./models/Content.js');
+    const count = await Content.countDocuments();
+    if (count === 0) {
+      console.log('No content found. Triggering initial generation...');
+      await ContentService.generateDailyContent();
+    }
+  });
 });
 
 // Middleware

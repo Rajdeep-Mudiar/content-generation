@@ -11,6 +11,8 @@ import {
   Eye
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import rehypeHighlight from 'rehype-highlight';
+import 'highlight.js/styles/github-dark.css';
 import api from '../api/axios';
 import styles from './GeneratedContent.module.css';
 
@@ -76,7 +78,11 @@ const GeneratedContent = () => {
           </thead>
           <tbody>
             {data?.content.map((item) => (
-              <tr key={item._id}>
+              <tr 
+                key={item._id} 
+                onClick={() => setSelectedContent(item)}
+                className={styles.clickableRow}
+              >
                 <td>
                   <div className={styles.contentTitle}>{item.title}</div>
                 </td>
@@ -93,7 +99,7 @@ const GeneratedContent = () => {
                 </td>
                 <td>{new Date(item.createdAt).toLocaleDateString()}</td>
                 <td>
-                  <div className={styles.actions}>
+                  <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => setSelectedContent(item)} className={styles.actionBtn}>
                       <Eye size={18} />
                     </button>
@@ -147,7 +153,9 @@ const GeneratedContent = () => {
               <div className={styles.contentArea}>
                 <label>Generated Content</label>
                 <div className={styles.markdown}>
-                  <ReactMarkdown>{selectedContent.generatedContent}</ReactMarkdown>
+                  <ReactMarkdown rehypePlugins={[rehypeHighlight]}>
+                    {selectedContent.generatedContent}
+                  </ReactMarkdown>
                 </div>
               </div>
               <div className={styles.metaItem}>

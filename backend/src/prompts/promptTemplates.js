@@ -7,19 +7,19 @@ export const TOPICS = [
 
 export const getPromptForPlatform = (platform, topic) => {
   const commonInstructions = `
-    Tone: Friendly, Informal, Beginner-friendly, Human-sounding, Engaging, Shareable.
     Focus on: ${topic}.
-    Output must be in valid JSON format with the following structure:
+    The output MUST be a valid JSON object. Do not include any text before or after the JSON.
+    JSON Structure:
     {
-      "title": "string",
-      "content": "string (markdown)",
-      "hashtags": ["string"],
-      "cta": "string",
-      "seoTitle": "string",
-      "seoDescription": "string",
-      "keywords": ["string"],
-      "imagePrompt": "string",
-      "thumbnailIdea": "string"
+      "title": "A catchy title",
+      "content": "The main content in markdown format",
+      "hashtags": ["#tag1", "#tag2"],
+      "cta": "Call to action",
+      "seoTitle": "SEO optimized title",
+      "seoDescription": "SEO optimized description",
+      "keywords": ["keyword1", "keyword2"],
+      "imagePrompt": "Detailed prompt for an AI image generator",
+      "thumbnailIdea": "Idea for a YouTube/Blog thumbnail"
     }
   `;
 
@@ -27,19 +27,22 @@ export const getPromptForPlatform = (platform, topic) => {
     Quora: `
       Task: Write a detailed, helpful Quora answer.
       Context: Someone asked a question about ${topic}.
-      Requirements: Start with a personal-sounding hook, provide value, use bullet points if needed, and keep it conversational.
+      Tone: Helpful, educational, personal.
+      Requirements: Start with a personal-sounding hook, provide deep value, use bullet points for readability.
       ${commonInstructions}
     `,
     LinkedIn: `
       Task: Write an engaging LinkedIn post.
       Context: Sharing insights or news about ${topic}.
-      Requirements: Use line breaks for readability, start with a strong hook, include a call to action, and use relevant emojis sparingly.
+      Tone: Professional yet conversational, engaging.
+      Requirements: Use line breaks, start with a strong hook, use emojis sparingly, end with a question to drive engagement.
       ${commonInstructions}
     `,
     Medium: `
       Task: Write a high-quality Medium article.
       Context: An educational or opinion piece on ${topic}.
-      Requirements: Include an introduction, subheadings, detailed explanation, and a conclusion. Use a storytelling approach.
+      Tone: Informative, storytelling, thought-provoking.
+      Requirements: Detailed introduction, subheadings, comprehensive coverage, and a conclusion.
       ${commonInstructions}
     `
   };

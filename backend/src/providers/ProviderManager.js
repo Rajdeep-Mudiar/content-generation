@@ -2,9 +2,6 @@ import axios from 'axios';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { ApiKey } from '../models/ApiKey.js';
 import { dbLogger } from '../utils/logger.js';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 class ProviderManager {
   constructor() {
@@ -28,16 +25,25 @@ class ProviderManager {
     const key = await ApiKey.findById(keyId);
     if (!key) return;
 
+    const statusCode = error.response?.status;
+    const errorMessage = error.response?.data?.error?.message || error.message || 'Unknown error';
+
     key.failureCount += 1;
-    key.lastError = error.message || 'Unknown error';
+    key.lastError = errorMessage;
     
-    if (key.failureCount >= this.maxFailures) {
+    // If it's a 401 (Unauthorized) or 402 (Payment Required), disable the key immediately
+    if (statusCode === 401 || statusCode === 402) {
       key.status = 'failed';
-      await dbLogger('error', `API Key ${keyId} disabled after ${this.maxFailures} failures`, 'ai_provider', { error: error.message });
+      await dbLogger('error', `API Key ${keyId} disabled: ${statusCode} ${errorMessage}`, 'ai_provider', { statusCode, error: errorMessage });
+    } else if (key.failureCount >= this.maxFailures) {
+      key.status = 'failed';
+      await dbLogger('error', `API Key ${keyId} disabled after ${this.maxFailures} failures`, 'ai_provider', { error: errorMessage });
     } else {
       key.status = 'cooldown';
-      key.cooldownUntil = new Date(Date.now() + this.cooldownPeriod);
-      await dbLogger('warn', `API Key ${keyId} put on cooldown`, 'ai_provider', { error: error.message });
+      // Exponential backoff for cooldown: 5min, 15min, 30min
+      const backoffMultiplier = Math.min(key.failureCount, 3);
+      key.cooldownUntil = new Date(Date.now() + this.cooldownPeriod * backoffMultiplier);
+      await dbLogger('warn', `API Key ${keyId} put on cooldown (${backoffMultiplier}x)`, 'ai_provider', { error: errorMessage });
     }
     
     await key.save();
@@ -62,9 +68,10 @@ class ProviderManager {
           'https://api.deepseek.com/v1/chat/completions',
           {
             model: process.env.DEEPSEEK_MODEL || 'deepseek-chat',
-            messages: [{ role: 'user', content: prompt }],
+            messages: [{ role: 'system', content: 'You are a professional content creator.' }, { role: 'user', content: prompt }],
             temperature: 0.7,
             max_tokens: 4096,
+            response_format: { type: 'json_object' }
           },
           {
             headers: {
@@ -100,10 +107,11 @@ class ProviderManager {
         const response = await axios.post(
           'https://api.groq.com/openai/v1/chat/completions',
           {
-            model: 'mixtral-8x7b-32768',
-            messages: [{ role: 'user', content: prompt }],
+            model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+            messages: [{ role: 'system', content: 'You are a professional content creator. Always respond in valid JSON.' }, { role: 'user', content: prompt }],
             temperature: 0.7,
             max_tokens: 4096,
+            response_format: { type: 'json_object' }
           },
           {
             headers: {
@@ -137,19 +145,22 @@ class ProviderManager {
       const startTime = Date.now();
       try {
         const genAI = new GoogleGenerativeAI(keyDoc.key);
-        // Try the configured model first, then fallback
         const models = [
           process.env.GEMINI_MODEL || 'gemini-2.0-flash',
           'gemini-1.5-flash',
-          'gemini-pro'
+          'gemini-1.5-pro'
         ];
 
         let text = '';
         let success = false;
+        let lastErr = null;
         
         for (const modelName of models) {
           try {
-            const model = genAI.getGenerativeModel({ model: modelName });
+            const model = genAI.getGenerativeModel({ 
+              model: modelName,
+              generationConfig: { responseMimeType: "application/json" }
+            });
             const result = await model.generateContent(prompt);
             const response = await result.response;
             text = response.text();
@@ -158,11 +169,12 @@ class ProviderManager {
               break;
             }
           } catch (e) {
+            lastErr = e;
             continue;
           }
         }
 
-        if (!success) throw new Error('Gemini failed with all models');
+        if (!success) throw lastErr || new Error('Gemini failed with all models');
 
         const latency = Date.now() - startTime;
         await this.markKeySuccess(keyDoc._id, latency, 0);

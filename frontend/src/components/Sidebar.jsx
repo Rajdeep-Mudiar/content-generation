@@ -21,12 +21,9 @@ const Sidebar = () => {
   const menuItems = [
     { path: '/', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { path: '/content', icon: <FileText size={20} />, label: 'Content' },
-    { path: '/calendar', icon: <Calendar size={20} />, label: 'Calendar' },
     { path: '/api-keys', icon: <Key size={20} />, label: 'API Keys' },
-    { path: '/analytics', icon: <BarChart3 size={20} />, label: 'Analytics' },
     { path: '/notion', icon: <Share2 size={20} />, label: 'Notion' },
     { path: '/logs', icon: <Activity size={20} />, label: 'Logs' },
-    { path: '/settings', icon: <Settings size={20} />, label: 'Settings' },
   ];
 
   return (
